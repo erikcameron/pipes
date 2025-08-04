@@ -1,6 +1,20 @@
-package component:pipes;
+package bos:pipes;
 
-/// An example world for the component to target.
-world example {
-    export hello-world: func() -> string;
+interface pipe {
+    resource call-object;
+    resource call-error;
+    resource call-args {
+        constructor(init: list<u8>);
+    }
+
+    resource step;
+    resource steps {
+        next: func() -> step;
+    }
+
+    call: func(args: call-args) -> result<call-object, call-error>;
+}
+
+world pipes {
+    export pipe; 
 }

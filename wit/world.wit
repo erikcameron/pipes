@@ -1,20 +1,23 @@
-package bos:pipes;
+package ubet:bos;
 
-interface pipe {
+interface pipes {
     resource call-object;
     resource call-error;
     resource call-args {
         constructor(init: list<u8>);
     }
+    type call-result = result<call-object, call-error>;
 
-    resource step;
+    resource step {
+        take: func(step: step, call: call-object) -> call-result;
+    } 
     resource steps {
-        next: func() -> step;
+        next: func() -> option<step>;
     }
 
-    call: func(args: call-args) -> result<call-object, call-error>;
+    pipe: func(steps: steps, args: call-args) -> call-result;
 }
 
-world pipes {
-    export pipe; 
+world bos {
+    export pipes; 
 }

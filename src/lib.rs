@@ -1,14 +1,12 @@
 #[allow(warnings)]
 mod bindings;
 
-use bindings::Guest;
+use bindings::exports::ubet::bos::pipes::Guest;
 
 struct Component;
 
 impl Guest for Component {
-    /// Say hello!
-    fn hello_world() -> String {
-        "Hello, World!".to_string()
+    fn call(steps: steps, call: call-object) -> call-result {
     }
 }
 

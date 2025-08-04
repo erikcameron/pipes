@@ -4,10 +4,10 @@
 #[rustfmt::skip]
 #[allow(dead_code, clippy::all)]
 pub mod exports {
-    pub mod bos {
-        pub mod pipes {
+    pub mod ubet {
+        pub mod bos {
             #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
-            pub mod pipe {
+            pub mod pipes {
                 #[used]
                 #[doc(hidden)]
                 static __FORCE_SECTION_REF: fn() = super::super::super::super::__link_custom_section_describing_imports;
@@ -124,7 +124,7 @@ pub mod exports {
                         unreachable!();
                         #[cfg(target_arch = "wasm32")]
                         {
-                            #[link(wasm_import_module = "[export]bos:pipes/pipe")]
+                            #[link(wasm_import_module = "[export]ubet:bos/pipes")]
                             unsafe extern "C" {
                                 #[link_name = "[resource-drop]call-object"]
                                 fn drop(_: u32);
@@ -245,7 +245,7 @@ pub mod exports {
                         unreachable!();
                         #[cfg(target_arch = "wasm32")]
                         {
-                            #[link(wasm_import_module = "[export]bos:pipes/pipe")]
+                            #[link(wasm_import_module = "[export]ubet:bos/pipes")]
                             unsafe extern "C" {
                                 #[link_name = "[resource-drop]call-error"]
                                 fn drop(_: u32);
@@ -366,7 +366,7 @@ pub mod exports {
                         unreachable!();
                         #[cfg(target_arch = "wasm32")]
                         {
-                            #[link(wasm_import_module = "[export]bos:pipes/pipe")]
+                            #[link(wasm_import_module = "[export]ubet:bos/pipes")]
                             unsafe extern "C" {
                                 #[link_name = "[resource-drop]call-args"]
                                 fn drop(_: u32);
@@ -375,6 +375,7 @@ pub mod exports {
                         }
                     }
                 }
+                pub type CallResult = Result<CallObject, CallError>;
                 #[derive(Debug)]
                 #[repr(transparent)]
                 pub struct Step {
@@ -487,7 +488,7 @@ pub mod exports {
                         unreachable!();
                         #[cfg(target_arch = "wasm32")]
                         {
-                            #[link(wasm_import_module = "[export]bos:pipes/pipe")]
+                            #[link(wasm_import_module = "[export]ubet:bos/pipes")]
                             unsafe extern "C" {
                                 #[link_name = "[resource-drop]step"]
                                 fn drop(_: u32);
@@ -608,7 +609,7 @@ pub mod exports {
                         unreachable!();
                         #[cfg(target_arch = "wasm32")]
                         {
-                            #[link(wasm_import_module = "[export]bos:pipes/pipe")]
+                            #[link(wasm_import_module = "[export]ubet:bos/pipes")]
                             unsafe extern "C" {
                                 #[link_name = "[resource-drop]steps"]
                                 fn drop(_: u32);
@@ -632,20 +633,62 @@ pub mod exports {
                 }
                 #[doc(hidden)]
                 #[allow(non_snake_case)]
+                pub unsafe fn _export_method_step_take_cabi<T: GuestStep>(
+                    arg0: *mut u8,
+                    arg1: i32,
+                    arg2: i32,
+                ) -> *mut u8 {
+                    #[cfg(target_arch = "wasm32")] _rt::run_ctors_once();
+                    let result0 = T::take(
+                        unsafe { StepBorrow::lift(arg0 as u32 as usize) }.get(),
+                        unsafe { Step::from_handle(arg1 as u32) },
+                        unsafe { CallObject::from_handle(arg2 as u32) },
+                    );
+                    let ptr1 = (&raw mut _RET_AREA.0).cast::<u8>();
+                    match result0 {
+                        Ok(e) => {
+                            *ptr1.add(0).cast::<u8>() = (0i32) as u8;
+                            *ptr1.add(4).cast::<i32>() = (e).take_handle() as i32;
+                        }
+                        Err(e) => {
+                            *ptr1.add(0).cast::<u8>() = (1i32) as u8;
+                            *ptr1.add(4).cast::<i32>() = (e).take_handle() as i32;
+                        }
+                    };
+                    ptr1
+                }
+                #[doc(hidden)]
+                #[allow(non_snake_case)]
                 pub unsafe fn _export_method_steps_next_cabi<T: GuestSteps>(
                     arg0: *mut u8,
-                ) -> i32 {
+                ) -> *mut u8 {
                     #[cfg(target_arch = "wasm32")] _rt::run_ctors_once();
                     let result0 = T::next(
                         unsafe { StepsBorrow::lift(arg0 as u32 as usize) }.get(),
                     );
-                    (result0).take_handle() as i32
+                    let ptr1 = (&raw mut _RET_AREA.0).cast::<u8>();
+                    match result0 {
+                        Some(e) => {
+                            *ptr1.add(0).cast::<u8>() = (1i32) as u8;
+                            *ptr1.add(4).cast::<i32>() = (e).take_handle() as i32;
+                        }
+                        None => {
+                            *ptr1.add(0).cast::<u8>() = (0i32) as u8;
+                        }
+                    };
+                    ptr1
                 }
                 #[doc(hidden)]
                 #[allow(non_snake_case)]
-                pub unsafe fn _export_call_cabi<T: Guest>(arg0: i32) -> *mut u8 {
+                pub unsafe fn _export_pipe_cabi<T: Guest>(
+                    arg0: i32,
+                    arg1: i32,
+                ) -> *mut u8 {
                     #[cfg(target_arch = "wasm32")] _rt::run_ctors_once();
-                    let result0 = T::call(unsafe { CallArgs::from_handle(arg0 as u32) });
+                    let result0 = T::pipe(
+                        unsafe { Steps::from_handle(arg0 as u32) },
+                        unsafe { CallArgs::from_handle(arg1 as u32) },
+                    );
                     let ptr1 = (&raw mut _RET_AREA.0).cast::<u8>();
                     match result0 {
                         Ok(e) => {
@@ -665,7 +708,7 @@ pub mod exports {
                     type CallArgs: GuestCallArgs;
                     type Step: GuestStep;
                     type Steps: GuestSteps;
-                    fn call(args: CallArgs) -> Result<CallObject, CallError>;
+                    fn pipe(steps: Steps, args: CallArgs) -> CallResult;
                 }
                 pub trait GuestCallObject: 'static {
                     #[doc(hidden)]
@@ -680,7 +723,7 @@ pub mod exports {
                         }
                         #[cfg(target_arch = "wasm32")]
                         {
-                            #[link(wasm_import_module = "[export]bos:pipes/pipe")]
+                            #[link(wasm_import_module = "[export]ubet:bos/pipes")]
                             unsafe extern "C" {
                                 #[link_name = "[resource-new]call-object"]
                                 fn new(_: *mut u8) -> u32;
@@ -700,7 +743,7 @@ pub mod exports {
                         }
                         #[cfg(target_arch = "wasm32")]
                         {
-                            #[link(wasm_import_module = "[export]bos:pipes/pipe")]
+                            #[link(wasm_import_module = "[export]ubet:bos/pipes")]
                             unsafe extern "C" {
                                 #[link_name = "[resource-rep]call-object"]
                                 fn rep(_: u32) -> *mut u8;
@@ -722,7 +765,7 @@ pub mod exports {
                         }
                         #[cfg(target_arch = "wasm32")]
                         {
-                            #[link(wasm_import_module = "[export]bos:pipes/pipe")]
+                            #[link(wasm_import_module = "[export]ubet:bos/pipes")]
                             unsafe extern "C" {
                                 #[link_name = "[resource-new]call-error"]
                                 fn new(_: *mut u8) -> u32;
@@ -742,7 +785,7 @@ pub mod exports {
                         }
                         #[cfg(target_arch = "wasm32")]
                         {
-                            #[link(wasm_import_module = "[export]bos:pipes/pipe")]
+                            #[link(wasm_import_module = "[export]ubet:bos/pipes")]
                             unsafe extern "C" {
                                 #[link_name = "[resource-rep]call-error"]
                                 fn rep(_: u32) -> *mut u8;
@@ -764,7 +807,7 @@ pub mod exports {
                         }
                         #[cfg(target_arch = "wasm32")]
                         {
-                            #[link(wasm_import_module = "[export]bos:pipes/pipe")]
+                            #[link(wasm_import_module = "[export]ubet:bos/pipes")]
                             unsafe extern "C" {
                                 #[link_name = "[resource-new]call-args"]
                                 fn new(_: *mut u8) -> u32;
@@ -784,7 +827,7 @@ pub mod exports {
                         }
                         #[cfg(target_arch = "wasm32")]
                         {
-                            #[link(wasm_import_module = "[export]bos:pipes/pipe")]
+                            #[link(wasm_import_module = "[export]ubet:bos/pipes")]
                             unsafe extern "C" {
                                 #[link_name = "[resource-rep]call-args"]
                                 fn rep(_: u32) -> *mut u8;
@@ -807,7 +850,7 @@ pub mod exports {
                         }
                         #[cfg(target_arch = "wasm32")]
                         {
-                            #[link(wasm_import_module = "[export]bos:pipes/pipe")]
+                            #[link(wasm_import_module = "[export]ubet:bos/pipes")]
                             unsafe extern "C" {
                                 #[link_name = "[resource-new]step"]
                                 fn new(_: *mut u8) -> u32;
@@ -827,7 +870,7 @@ pub mod exports {
                         }
                         #[cfg(target_arch = "wasm32")]
                         {
-                            #[link(wasm_import_module = "[export]bos:pipes/pipe")]
+                            #[link(wasm_import_module = "[export]ubet:bos/pipes")]
                             unsafe extern "C" {
                                 #[link_name = "[resource-rep]step"]
                                 fn rep(_: u32) -> *mut u8;
@@ -835,6 +878,7 @@ pub mod exports {
                             unsafe { rep(handle) }
                         }
                     }
+                    fn take(&self, step: Step, call: CallObject) -> CallResult;
                 }
                 pub trait GuestSteps: 'static {
                     #[doc(hidden)]
@@ -849,7 +893,7 @@ pub mod exports {
                         }
                         #[cfg(target_arch = "wasm32")]
                         {
-                            #[link(wasm_import_module = "[export]bos:pipes/pipe")]
+                            #[link(wasm_import_module = "[export]ubet:bos/pipes")]
                             unsafe extern "C" {
                                 #[link_name = "[resource-new]steps"]
                                 fn new(_: *mut u8) -> u32;
@@ -869,7 +913,7 @@ pub mod exports {
                         }
                         #[cfg(target_arch = "wasm32")]
                         {
-                            #[link(wasm_import_module = "[export]bos:pipes/pipe")]
+                            #[link(wasm_import_module = "[export]ubet:bos/pipes")]
                             unsafe extern "C" {
                                 #[link_name = "[resource-rep]steps"]
                                 fn rep(_: u32) -> *mut u8;
@@ -877,52 +921,57 @@ pub mod exports {
                             unsafe { rep(handle) }
                         }
                     }
-                    fn next(&self) -> Step;
+                    fn next(&self) -> Option<Step>;
                 }
                 #[doc(hidden)]
-                macro_rules! __export_bos_pipes_pipe_cabi {
+                macro_rules! __export_ubet_bos_pipes_cabi {
                     ($ty:ident with_types_in $($path_to_types:tt)*) => {
                         const _ : () = { #[unsafe (export_name =
-                        "bos:pipes/pipe#[constructor]call-args")] unsafe extern "C" fn
+                        "ubet:bos/pipes#[constructor]call-args")] unsafe extern "C" fn
                         export_constructor_call_args(arg0 : * mut u8, arg1 : usize,) ->
                         i32 { unsafe { $($path_to_types)*::
                         _export_constructor_call_args_cabi::<<$ty as $($path_to_types)*::
                         Guest >::CallArgs > (arg0, arg1) } } #[unsafe (export_name =
-                        "bos:pipes/pipe#[method]steps.next")] unsafe extern "C" fn
-                        export_method_steps_next(arg0 : * mut u8,) -> i32 { unsafe {
+                        "ubet:bos/pipes#[method]step.take")] unsafe extern "C" fn
+                        export_method_step_take(arg0 : * mut u8, arg1 : i32, arg2 : i32,)
+                        -> * mut u8 { unsafe { $($path_to_types)*::
+                        _export_method_step_take_cabi::<<$ty as $($path_to_types)*::
+                        Guest >::Step > (arg0, arg1, arg2) } } #[unsafe (export_name =
+                        "ubet:bos/pipes#[method]steps.next")] unsafe extern "C" fn
+                        export_method_steps_next(arg0 : * mut u8,) -> * mut u8 { unsafe {
                         $($path_to_types)*:: _export_method_steps_next_cabi::<<$ty as
                         $($path_to_types)*:: Guest >::Steps > (arg0) } } #[unsafe
-                        (export_name = "bos:pipes/pipe#call")] unsafe extern "C" fn
-                        export_call(arg0 : i32,) -> * mut u8 { unsafe {
-                        $($path_to_types)*:: _export_call_cabi::<$ty > (arg0) } } const _
-                        : () = { #[doc(hidden)] #[unsafe (export_name =
-                        "bos:pipes/pipe#[dtor]call-object")] #[allow(non_snake_case)]
+                        (export_name = "ubet:bos/pipes#pipe")] unsafe extern "C" fn
+                        export_pipe(arg0 : i32, arg1 : i32,) -> * mut u8 { unsafe {
+                        $($path_to_types)*:: _export_pipe_cabi::<$ty > (arg0, arg1) } }
+                        const _ : () = { #[doc(hidden)] #[unsafe (export_name =
+                        "ubet:bos/pipes#[dtor]call-object")] #[allow(non_snake_case)]
                         unsafe extern "C" fn dtor(rep : * mut u8) { unsafe {
                         $($path_to_types)*:: CallObject::dtor::< <$ty as
                         $($path_to_types)*:: Guest >::CallObject > (rep) } } }; const _ :
                         () = { #[doc(hidden)] #[unsafe (export_name =
-                        "bos:pipes/pipe#[dtor]call-error")] #[allow(non_snake_case)]
+                        "ubet:bos/pipes#[dtor]call-error")] #[allow(non_snake_case)]
                         unsafe extern "C" fn dtor(rep : * mut u8) { unsafe {
                         $($path_to_types)*:: CallError::dtor::< <$ty as
                         $($path_to_types)*:: Guest >::CallError > (rep) } } }; const _ :
                         () = { #[doc(hidden)] #[unsafe (export_name =
-                        "bos:pipes/pipe#[dtor]call-args")] #[allow(non_snake_case)]
+                        "ubet:bos/pipes#[dtor]call-args")] #[allow(non_snake_case)]
                         unsafe extern "C" fn dtor(rep : * mut u8) { unsafe {
                         $($path_to_types)*:: CallArgs::dtor::< <$ty as
                         $($path_to_types)*:: Guest >::CallArgs > (rep) } } }; const _ :
                         () = { #[doc(hidden)] #[unsafe (export_name =
-                        "bos:pipes/pipe#[dtor]step")] #[allow(non_snake_case)] unsafe
+                        "ubet:bos/pipes#[dtor]step")] #[allow(non_snake_case)] unsafe
                         extern "C" fn dtor(rep : * mut u8) { unsafe {
                         $($path_to_types)*:: Step::dtor::< <$ty as $($path_to_types)*::
                         Guest >::Step > (rep) } } }; const _ : () = { #[doc(hidden)]
-                        #[unsafe (export_name = "bos:pipes/pipe#[dtor]steps")]
+                        #[unsafe (export_name = "ubet:bos/pipes#[dtor]steps")]
                         #[allow(non_snake_case)] unsafe extern "C" fn dtor(rep : * mut
                         u8) { unsafe { $($path_to_types)*:: Steps::dtor::< <$ty as
                         $($path_to_types)*:: Guest >::Steps > (rep) } } }; };
                     };
                 }
                 #[doc(hidden)]
-                pub(crate) use __export_bos_pipes_pipe_cabi;
+                pub(crate) use __export_ubet_bos_pipes_cabi;
                 #[repr(align(4))]
                 struct _RetArea([::core::mem::MaybeUninit<u8>; 8]);
                 static mut _RET_AREA: _RetArea = _RetArea(
@@ -1035,34 +1084,34 @@ mod _rt {
 /// ```
 #[allow(unused_macros)]
 #[doc(hidden)]
-macro_rules! __export_pipes_impl {
+macro_rules! __export_bos_impl {
     ($ty:ident) => {
         self::export!($ty with_types_in self);
     };
     ($ty:ident with_types_in $($path_to_types_root:tt)*) => {
         $($path_to_types_root)*::
-        exports::bos::pipes::pipe::__export_bos_pipes_pipe_cabi!($ty with_types_in
-        $($path_to_types_root)*:: exports::bos::pipes::pipe);
+        exports::ubet::bos::pipes::__export_ubet_bos_pipes_cabi!($ty with_types_in
+        $($path_to_types_root)*:: exports::ubet::bos::pipes);
     };
 }
 #[doc(inline)]
-pub(crate) use __export_pipes_impl as export;
+pub(crate) use __export_bos_impl as export;
 #[cfg(target_arch = "wasm32")]
-#[unsafe(
-    link_section = "component-type:wit-bindgen:0.41.0:bos:pipes:pipes:encoded world"
-)]
+#[unsafe(link_section = "component-type:wit-bindgen:0.41.0:ubet:bos:bos:encoded world")]
 #[doc(hidden)]
 #[allow(clippy::octal_escapes)]
-pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 352] = *b"\
-\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\xe4\x01\x01A\x02\x01\
-A\x02\x01B\x12\x04\0\x0bcall-object\x03\x01\x04\0\x0acall-error\x03\x01\x04\0\x09\
-call-args\x03\x01\x04\0\x04step\x03\x01\x04\0\x05steps\x03\x01\x01p}\x01i\x02\x01\
-@\x01\x04init\x05\0\x06\x04\0\x16[constructor]call-args\x01\x07\x01h\x04\x01i\x03\
-\x01@\x01\x04self\x08\0\x09\x04\0\x12[method]steps.next\x01\x0a\x01i\0\x01i\x01\x01\
-j\x01\x0b\x01\x0c\x01@\x01\x04args\x06\0\x0d\x04\0\x04call\x01\x0e\x04\0\x0ebos:\
-pipes/pipe\x05\0\x04\0\x0fbos:pipes/pipes\x04\0\x0b\x0b\x01\0\x05pipes\x03\0\0\0\
-G\x09producers\x01\x0cprocessed-by\x02\x0dwit-component\x070.227.1\x10wit-bindge\
-n-rust\x060.41.0";
+pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 425] = *b"\
+\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\xaf\x02\x01A\x02\x01\
+A\x02\x01B\x18\x04\0\x0bcall-object\x03\x01\x04\0\x0acall-error\x03\x01\x04\0\x09\
+call-args\x03\x01\x01i\0\x01i\x01\x01j\x01\x03\x01\x04\x04\0\x0bcall-result\x03\0\
+\x05\x04\0\x04step\x03\x01\x04\0\x05steps\x03\x01\x01p}\x01i\x02\x01@\x01\x04ini\
+t\x09\0\x0a\x04\0\x16[constructor]call-args\x01\x0b\x01h\x07\x01i\x07\x01@\x03\x04\
+self\x0c\x04step\x0d\x04call\x03\0\x06\x04\0\x11[method]step.take\x01\x0e\x01h\x08\
+\x01k\x0d\x01@\x01\x04self\x0f\0\x10\x04\0\x12[method]steps.next\x01\x11\x01i\x08\
+\x01@\x02\x05steps\x12\x04args\x0a\0\x06\x04\0\x04pipe\x01\x13\x04\0\x0eubet:bos\
+/pipes\x05\0\x04\0\x0cubet:bos/bos\x04\0\x0b\x09\x01\0\x03bos\x03\0\0\0G\x09prod\
+ucers\x01\x0cprocessed-by\x02\x0dwit-component\x070.227.1\x10wit-bindgen-rust\x06\
+0.41.0";
 #[inline(never)]
 #[doc(hidden)]
 pub fn __link_custom_section_describing_imports() {

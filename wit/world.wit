@@ -1,11 +1,11 @@
 package ubet:bos;
 
 interface pipes {
-    resource call-object;
-    resource call-error;
-    resource call-args {
+    resource call-object {
         constructor(init: list<u8>);
     }
+    resource call-error;
+    type call-args = list<u8>;
     type call-result = result<call-object, call-error>;
 
     resource step {

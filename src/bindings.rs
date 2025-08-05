@@ -254,127 +254,7 @@ pub mod exports {
                         }
                     }
                 }
-                #[derive(Debug)]
-                #[repr(transparent)]
-                pub struct CallArgs {
-                    handle: _rt::Resource<CallArgs>,
-                }
-                type _CallArgsRep<T> = Option<T>;
-                impl CallArgs {
-                    /// Creates a new resource from the specified representation.
-                    ///
-                    /// This function will create a new resource handle by moving `val` onto
-                    /// the heap and then passing that heap pointer to the component model to
-                    /// create a handle. The owned handle is then returned as `CallArgs`.
-                    pub fn new<T: GuestCallArgs>(val: T) -> Self {
-                        Self::type_guard::<T>();
-                        let val: _CallArgsRep<T> = Some(val);
-                        let ptr: *mut _CallArgsRep<T> = _rt::Box::into_raw(
-                            _rt::Box::new(val),
-                        );
-                        unsafe { Self::from_handle(T::_resource_new(ptr.cast())) }
-                    }
-                    /// Gets access to the underlying `T` which represents this resource.
-                    pub fn get<T: GuestCallArgs>(&self) -> &T {
-                        let ptr = unsafe { &*self.as_ptr::<T>() };
-                        ptr.as_ref().unwrap()
-                    }
-                    /// Gets mutable access to the underlying `T` which represents this
-                    /// resource.
-                    pub fn get_mut<T: GuestCallArgs>(&mut self) -> &mut T {
-                        let ptr = unsafe { &mut *self.as_ptr::<T>() };
-                        ptr.as_mut().unwrap()
-                    }
-                    /// Consumes this resource and returns the underlying `T`.
-                    pub fn into_inner<T: GuestCallArgs>(self) -> T {
-                        let ptr = unsafe { &mut *self.as_ptr::<T>() };
-                        ptr.take().unwrap()
-                    }
-                    #[doc(hidden)]
-                    pub unsafe fn from_handle(handle: u32) -> Self {
-                        Self {
-                            handle: unsafe { _rt::Resource::from_handle(handle) },
-                        }
-                    }
-                    #[doc(hidden)]
-                    pub fn take_handle(&self) -> u32 {
-                        _rt::Resource::take_handle(&self.handle)
-                    }
-                    #[doc(hidden)]
-                    pub fn handle(&self) -> u32 {
-                        _rt::Resource::handle(&self.handle)
-                    }
-                    #[doc(hidden)]
-                    fn type_guard<T: 'static>() {
-                        use core::any::TypeId;
-                        static mut LAST_TYPE: Option<TypeId> = None;
-                        unsafe {
-                            assert!(! cfg!(target_feature = "atomics"));
-                            let id = TypeId::of::<T>();
-                            match LAST_TYPE {
-                                Some(ty) => {
-                                    assert!(
-                                        ty == id, "cannot use two types with this resource type"
-                                    )
-                                }
-                                None => LAST_TYPE = Some(id),
-                            }
-                        }
-                    }
-                    #[doc(hidden)]
-                    pub unsafe fn dtor<T: 'static>(handle: *mut u8) {
-                        Self::type_guard::<T>();
-                        let _ = unsafe {
-                            _rt::Box::from_raw(handle as *mut _CallArgsRep<T>)
-                        };
-                    }
-                    fn as_ptr<T: GuestCallArgs>(&self) -> *mut _CallArgsRep<T> {
-                        CallArgs::type_guard::<T>();
-                        T::_resource_rep(self.handle()).cast()
-                    }
-                }
-                /// A borrowed version of [`CallArgs`] which represents a borrowed value
-                /// with the lifetime `'a`.
-                #[derive(Debug)]
-                #[repr(transparent)]
-                pub struct CallArgsBorrow<'a> {
-                    rep: *mut u8,
-                    _marker: core::marker::PhantomData<&'a CallArgs>,
-                }
-                impl<'a> CallArgsBorrow<'a> {
-                    #[doc(hidden)]
-                    pub unsafe fn lift(rep: usize) -> Self {
-                        Self {
-                            rep: rep as *mut u8,
-                            _marker: core::marker::PhantomData,
-                        }
-                    }
-                    /// Gets access to the underlying `T` in this resource.
-                    pub fn get<T: GuestCallArgs>(&self) -> &T {
-                        let ptr = unsafe { &mut *self.as_ptr::<T>() };
-                        ptr.as_ref().unwrap()
-                    }
-                    fn as_ptr<T: 'static>(&self) -> *mut _CallArgsRep<T> {
-                        CallArgs::type_guard::<T>();
-                        self.rep.cast()
-                    }
-                }
-                unsafe impl _rt::WasmResource for CallArgs {
-                    #[inline]
-                    unsafe fn drop(_handle: u32) {
-                        #[cfg(not(target_arch = "wasm32"))]
-                        unreachable!();
-                        #[cfg(target_arch = "wasm32")]
-                        {
-                            #[link(wasm_import_module = "[export]ubet:bos/pipes")]
-                            unsafe extern "C" {
-                                #[link_name = "[resource-drop]call-args"]
-                                fn drop(_: u32);
-                            }
-                            unsafe { drop(_handle) };
-                        }
-                    }
-                }
+                pub type CallArgs = _rt::Vec<u8>;
                 pub type CallResult = Result<CallObject, CallError>;
                 #[derive(Debug)]
                 #[repr(transparent)]
@@ -620,13 +500,13 @@ pub mod exports {
                 }
                 #[doc(hidden)]
                 #[allow(non_snake_case)]
-                pub unsafe fn _export_constructor_call_args_cabi<T: GuestCallArgs>(
+                pub unsafe fn _export_constructor_call_object_cabi<T: GuestCallObject>(
                     arg0: *mut u8,
                     arg1: usize,
                 ) -> i32 {
                     #[cfg(target_arch = "wasm32")] _rt::run_ctors_once();
                     let len0 = arg1;
-                    let result1 = CallArgs::new(
+                    let result1 = CallObject::new(
                         T::new(_rt::Vec::from_raw_parts(arg0.cast(), len0, len0)),
                     );
                     (result1).take_handle() as i32
@@ -682,30 +562,31 @@ pub mod exports {
                 #[allow(non_snake_case)]
                 pub unsafe fn _export_pipe_cabi<T: Guest>(
                     arg0: i32,
-                    arg1: i32,
+                    arg1: *mut u8,
+                    arg2: usize,
                 ) -> *mut u8 {
                     #[cfg(target_arch = "wasm32")] _rt::run_ctors_once();
-                    let result0 = T::pipe(
+                    let len0 = arg2;
+                    let result1 = T::pipe(
                         unsafe { Steps::from_handle(arg0 as u32) },
-                        unsafe { CallArgs::from_handle(arg1 as u32) },
+                        _rt::Vec::from_raw_parts(arg1.cast(), len0, len0),
                     );
-                    let ptr1 = (&raw mut _RET_AREA.0).cast::<u8>();
-                    match result0 {
+                    let ptr2 = (&raw mut _RET_AREA.0).cast::<u8>();
+                    match result1 {
                         Ok(e) => {
-                            *ptr1.add(0).cast::<u8>() = (0i32) as u8;
-                            *ptr1.add(4).cast::<i32>() = (e).take_handle() as i32;
+                            *ptr2.add(0).cast::<u8>() = (0i32) as u8;
+                            *ptr2.add(4).cast::<i32>() = (e).take_handle() as i32;
                         }
                         Err(e) => {
-                            *ptr1.add(0).cast::<u8>() = (1i32) as u8;
-                            *ptr1.add(4).cast::<i32>() = (e).take_handle() as i32;
+                            *ptr2.add(0).cast::<u8>() = (1i32) as u8;
+                            *ptr2.add(4).cast::<i32>() = (e).take_handle() as i32;
                         }
                     };
-                    ptr1
+                    ptr2
                 }
                 pub trait Guest {
                     type CallObject: GuestCallObject;
                     type CallError: GuestCallError;
-                    type CallArgs: GuestCallArgs;
                     type Step: GuestStep;
                     type Steps: GuestSteps;
                     fn pipe(steps: Steps, args: CallArgs) -> CallResult;
@@ -751,6 +632,7 @@ pub mod exports {
                             unsafe { rep(handle) }
                         }
                     }
+                    fn new(init: _rt::Vec<u8>) -> Self;
                 }
                 pub trait GuestCallError: 'static {
                     #[doc(hidden)]
@@ -793,49 +675,6 @@ pub mod exports {
                             unsafe { rep(handle) }
                         }
                     }
-                }
-                pub trait GuestCallArgs: 'static {
-                    #[doc(hidden)]
-                    unsafe fn _resource_new(val: *mut u8) -> u32
-                    where
-                        Self: Sized,
-                    {
-                        #[cfg(not(target_arch = "wasm32"))]
-                        {
-                            let _ = val;
-                            unreachable!();
-                        }
-                        #[cfg(target_arch = "wasm32")]
-                        {
-                            #[link(wasm_import_module = "[export]ubet:bos/pipes")]
-                            unsafe extern "C" {
-                                #[link_name = "[resource-new]call-args"]
-                                fn new(_: *mut u8) -> u32;
-                            }
-                            unsafe { new(val) }
-                        }
-                    }
-                    #[doc(hidden)]
-                    fn _resource_rep(handle: u32) -> *mut u8
-                    where
-                        Self: Sized,
-                    {
-                        #[cfg(not(target_arch = "wasm32"))]
-                        {
-                            let _ = handle;
-                            unreachable!();
-                        }
-                        #[cfg(target_arch = "wasm32")]
-                        {
-                            #[link(wasm_import_module = "[export]ubet:bos/pipes")]
-                            unsafe extern "C" {
-                                #[link_name = "[resource-rep]call-args"]
-                                fn rep(_: u32) -> *mut u8;
-                            }
-                            unsafe { rep(handle) }
-                        }
-                    }
-                    fn new(init: _rt::Vec<u8>) -> Self;
                 }
                 pub trait GuestStep: 'static {
                     #[doc(hidden)]
@@ -927,24 +766,25 @@ pub mod exports {
                 macro_rules! __export_ubet_bos_pipes_cabi {
                     ($ty:ident with_types_in $($path_to_types:tt)*) => {
                         const _ : () = { #[unsafe (export_name =
-                        "ubet:bos/pipes#[constructor]call-args")] unsafe extern "C" fn
-                        export_constructor_call_args(arg0 : * mut u8, arg1 : usize,) ->
+                        "ubet:bos/pipes#[constructor]call-object")] unsafe extern "C" fn
+                        export_constructor_call_object(arg0 : * mut u8, arg1 : usize,) ->
                         i32 { unsafe { $($path_to_types)*::
-                        _export_constructor_call_args_cabi::<<$ty as $($path_to_types)*::
-                        Guest >::CallArgs > (arg0, arg1) } } #[unsafe (export_name =
-                        "ubet:bos/pipes#[method]step.take")] unsafe extern "C" fn
-                        export_method_step_take(arg0 : * mut u8, arg1 : i32, arg2 : i32,)
+                        _export_constructor_call_object_cabi::<<$ty as
+                        $($path_to_types)*:: Guest >::CallObject > (arg0, arg1) } }
+                        #[unsafe (export_name = "ubet:bos/pipes#[method]step.take")]
+                        unsafe extern "C" fn export_method_step_take(arg0 : * mut u8,
+                        arg1 : i32, arg2 : i32,) -> * mut u8 { unsafe {
+                        $($path_to_types)*:: _export_method_step_take_cabi::<<$ty as
+                        $($path_to_types)*:: Guest >::Step > (arg0, arg1, arg2) } }
+                        #[unsafe (export_name = "ubet:bos/pipes#[method]steps.next")]
+                        unsafe extern "C" fn export_method_steps_next(arg0 : * mut u8,)
                         -> * mut u8 { unsafe { $($path_to_types)*::
-                        _export_method_step_take_cabi::<<$ty as $($path_to_types)*::
-                        Guest >::Step > (arg0, arg1, arg2) } } #[unsafe (export_name =
-                        "ubet:bos/pipes#[method]steps.next")] unsafe extern "C" fn
-                        export_method_steps_next(arg0 : * mut u8,) -> * mut u8 { unsafe {
-                        $($path_to_types)*:: _export_method_steps_next_cabi::<<$ty as
-                        $($path_to_types)*:: Guest >::Steps > (arg0) } } #[unsafe
-                        (export_name = "ubet:bos/pipes#pipe")] unsafe extern "C" fn
-                        export_pipe(arg0 : i32, arg1 : i32,) -> * mut u8 { unsafe {
-                        $($path_to_types)*:: _export_pipe_cabi::<$ty > (arg0, arg1) } }
-                        const _ : () = { #[doc(hidden)] #[unsafe (export_name =
+                        _export_method_steps_next_cabi::<<$ty as $($path_to_types)*::
+                        Guest >::Steps > (arg0) } } #[unsafe (export_name =
+                        "ubet:bos/pipes#pipe")] unsafe extern "C" fn export_pipe(arg0 :
+                        i32, arg1 : * mut u8, arg2 : usize,) -> * mut u8 { unsafe {
+                        $($path_to_types)*:: _export_pipe_cabi::<$ty > (arg0, arg1, arg2)
+                        } } const _ : () = { #[doc(hidden)] #[unsafe (export_name =
                         "ubet:bos/pipes#[dtor]call-object")] #[allow(non_snake_case)]
                         unsafe extern "C" fn dtor(rep : * mut u8) { unsafe {
                         $($path_to_types)*:: CallObject::dtor::< <$ty as
@@ -954,11 +794,6 @@ pub mod exports {
                         unsafe extern "C" fn dtor(rep : * mut u8) { unsafe {
                         $($path_to_types)*:: CallError::dtor::< <$ty as
                         $($path_to_types)*:: Guest >::CallError > (rep) } } }; const _ :
-                        () = { #[doc(hidden)] #[unsafe (export_name =
-                        "ubet:bos/pipes#[dtor]call-args")] #[allow(non_snake_case)]
-                        unsafe extern "C" fn dtor(rep : * mut u8) { unsafe {
-                        $($path_to_types)*:: CallArgs::dtor::< <$ty as
-                        $($path_to_types)*:: Guest >::CallArgs > (rep) } } }; const _ :
                         () = { #[doc(hidden)] #[unsafe (export_name =
                         "ubet:bos/pipes#[dtor]step")] #[allow(non_snake_case)] unsafe
                         extern "C" fn dtor(rep : * mut u8) { unsafe {
@@ -1059,11 +894,11 @@ mod _rt {
         }
     }
     pub use alloc_crate::boxed::Box;
+    pub use alloc_crate::vec::Vec;
     #[cfg(target_arch = "wasm32")]
     pub fn run_ctors_once() {
         wit_bindgen_rt::run_ctors_once();
     }
-    pub use alloc_crate::vec::Vec;
     extern crate alloc as alloc_crate;
 }
 /// Generates `#[unsafe(no_mangle)]` functions to export the specified type as
@@ -1100,18 +935,18 @@ pub(crate) use __export_bos_impl as export;
 #[unsafe(link_section = "component-type:wit-bindgen:0.41.0:ubet:bos:bos:encoded world")]
 #[doc(hidden)]
 #[allow(clippy::octal_escapes)]
-pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 425] = *b"\
-\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\xaf\x02\x01A\x02\x01\
-A\x02\x01B\x18\x04\0\x0bcall-object\x03\x01\x04\0\x0acall-error\x03\x01\x04\0\x09\
-call-args\x03\x01\x01i\0\x01i\x01\x01j\x01\x03\x01\x04\x04\0\x0bcall-result\x03\0\
-\x05\x04\0\x04step\x03\x01\x04\0\x05steps\x03\x01\x01p}\x01i\x02\x01@\x01\x04ini\
-t\x09\0\x0a\x04\0\x16[constructor]call-args\x01\x0b\x01h\x07\x01i\x07\x01@\x03\x04\
-self\x0c\x04step\x0d\x04call\x03\0\x06\x04\0\x11[method]step.take\x01\x0e\x01h\x08\
-\x01k\x0d\x01@\x01\x04self\x0f\0\x10\x04\0\x12[method]steps.next\x01\x11\x01i\x08\
-\x01@\x02\x05steps\x12\x04args\x0a\0\x06\x04\0\x04pipe\x01\x13\x04\0\x0eubet:bos\
-/pipes\x05\0\x04\0\x0cubet:bos/bos\x04\0\x0b\x09\x01\0\x03bos\x03\0\0\0G\x09prod\
-ucers\x01\x0cprocessed-by\x02\x0dwit-component\x070.227.1\x10wit-bindgen-rust\x06\
-0.41.0";
+pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 428] = *b"\
+\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\xb2\x02\x01A\x02\x01\
+A\x02\x01B\x18\x04\0\x0bcall-object\x03\x01\x04\0\x0acall-error\x03\x01\x01p}\x04\
+\0\x09call-args\x03\0\x02\x01i\0\x01i\x01\x01j\x01\x04\x01\x05\x04\0\x0bcall-res\
+ult\x03\0\x06\x04\0\x04step\x03\x01\x04\0\x05steps\x03\x01\x01p}\x01@\x01\x04ini\
+t\x0a\0\x04\x04\0\x18[constructor]call-object\x01\x0b\x01h\x08\x01i\x08\x01@\x03\
+\x04self\x0c\x04step\x0d\x04call\x04\0\x07\x04\0\x11[method]step.take\x01\x0e\x01\
+h\x09\x01k\x0d\x01@\x01\x04self\x0f\0\x10\x04\0\x12[method]steps.next\x01\x11\x01\
+i\x09\x01@\x02\x05steps\x12\x04args\x03\0\x07\x04\0\x04pipe\x01\x13\x04\0\x0eube\
+t:bos/pipes\x05\0\x04\0\x0cubet:bos/bos\x04\0\x0b\x09\x01\0\x03bos\x03\0\0\0G\x09\
+producers\x01\x0cprocessed-by\x02\x0dwit-component\x070.227.1\x10wit-bindgen-rus\
+t\x060.41.0";
 #[inline(never)]
 #[doc(hidden)]
 pub fn __link_custom_section_describing_imports() {

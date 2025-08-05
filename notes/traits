@@ -1,0 +1,28 @@
+# traits
+
+
+## `Call`
+
+### getters
+
+- `id` () -> String (required, immutable)
+- `args` () -> Args (required, immutable)
+- `context` () -> Context (required, immutable?)
+- `view` () -> View (optional, settable)
+- `error` () -> Error (optional, settable)
+- `log` () -> Log (vec, append-only if possible)
+- `bindings` () ->  (special hashmap, mutable)
+
+### setters
+
+- `with_view` (view) -> Call
+- `with_error` (error | errors) -> Call
+- `with_event` (event | events) -> Call
+- `with_binding` (HashMap) -> Call
+
+
+## `Step`
+
+- `take` (?)
+
+

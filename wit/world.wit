@@ -1,23 +1,14 @@
 package ubet:bos;
 
 interface pipes {
-    resource call-object {
-        constructor(init: list<u8>);
-    }
+    resource call-object;
     resource call-error;
-    type call-args = list<u8>;
     type call-result = result<call-object, call-error>;
 
-    resource step {
-        take: func(step: step, call: call-object) -> call-result;
-    } 
-    resource steps {
-        next: func() -> option<step>;
-    }
-
-    pipe: func(steps: steps, args: call-args) -> call-result;
+    dispatch: func(env: list<tuple<string, string>>, binargs: list<u8>) -> call-result;
 }
 
 world bos {
+    import wasi:clocks/monotonic-clock@0.2.6;
     export pipes; 
 }

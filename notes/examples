@@ -1,0 +1,26 @@
+
+
+StepState: {
+  Grammar::Subject => "Brutus",
+  Grammar::Predicate => "stabbed",
+  Grammar::Object => "Caesar",
+}
+
+
+component sentence, (last, state), [Grammar::Subject, Grammar::Predicate, Grammar::Object], Bind(Grammar::Sentence)
+
+Grammar::Sentence => "Brutus stabbed Caesar"
+
+
+StepState {
+  Sequence(Math::Float, 0) => 10.2,
+  Sequence(Math::Float, 1) => 42.0,
+  Sequence(Math::Float, 2) => 107.5,
+)
+
+component multiply, (last, state), [Sequence(Math::Float, 0), ...], Bind(Math::Product) 
+Math::Product => 46053
+
+
+
+

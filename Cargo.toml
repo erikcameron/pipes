@@ -4,6 +4,8 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+uuid = "1.17.0"
+wasi = "0.14.2"
 wit-bindgen-rt = { version = "0.43.0", features = ["bitflags"] }
 
 [lib]
@@ -13,3 +15,6 @@ crate-type = ["cdylib"]
 package = "bos:pipes"
 
 [package.metadata.component.dependencies]
+
+[package.metadata.component.target.dependencies]
+"wasi:clocks" = "0.2.6"

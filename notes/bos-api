@@ -1,0 +1,98 @@
+# BOS API
+
+## LOCAL
+
+  - new<P> -> Self
+  - run<C> -> Result<Call, E>
+
+  - session
+    - connection
+    - config
+    - cache
+    - live
+
+
+## session
+
+  - open
+  - close
+  - stat
+
+## live
+
+  - subscribe(SubscriptionParams) -> Result<Subscriptions, E>
+  - unsubscribe(SubscriptionParams) -> Result<Subscriptions, E>
+  - post(Message) -> Result<Call, E>
+  - register(Message, Handler)
+  - handle(Message) -> Result<Call, E>
+
+## resources
+
+### read
+
+  - list<P> -> Result<TagListings, E>
+  - search<P> -> Result<SearchResults, E>
+  - stream<T, P> -> ??
+  - read<T, P> -> Result<T, E>
+  - refresh<T> -> Result<T, E>
+
+Generic reader (server):
+  - build
+  - auth
+  - render
+
+
+Generic streamer (server):
+  - build
+  - auth
+  - stream
+
+### write
+
+  - create<T, P> -> Result<T, E>
+  - update<T, P> -> Result<T, E>
+  - delete<T, P> -> Result<T, E>
+  - stream<T, P> -> ??
+
+Generic writer (server):
+
+  - build
+  - auth
+  - validate
+  - commit
+  - render
+
+Other:
+  - stream (wraps change/validate/commit loop)
+  - open_transaction
+  - close_transaction
+
+
+## blts
+
+### blocks
+
+  - insert
+  - update
+  - upsert
+  - tagsert
+  - delete
+  - link
+  - unlink
+
+### tags
+
+  - insert
+  - update
+  - upsert
+  - move
+  - delete
+  - share
+  - unshare
+
+### public
+
+  - import
+  - sync
+  - export
+  - purge

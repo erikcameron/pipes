@@ -3,6 +3,262 @@
 //   * runtime_path: "wit_bindgen_rt"
 #[rustfmt::skip]
 #[allow(dead_code, clippy::all)]
+pub mod wasi {
+    pub mod clocks {
+        /// WASI Monotonic Clock is a clock API intended to let users measure elapsed
+        /// time.
+        ///
+        /// It is intended to be portable at least between Unix-family platforms and
+        /// Windows.
+        ///
+        /// A monotonic clock is a clock which has an unspecified initial value, and
+        /// successive reads of the clock will produce non-decreasing values.
+        #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
+        pub mod monotonic_clock {
+            #[used]
+            #[doc(hidden)]
+            static __FORCE_SECTION_REF: fn() = super::super::super::__link_custom_section_describing_imports;
+            use super::super::super::_rt;
+            pub type Pollable = super::super::super::wasi::io::poll::Pollable;
+            /// An instant in time, in nanoseconds. An instant is relative to an
+            /// unspecified initial value, and can only be compared to instances from
+            /// the same monotonic-clock.
+            pub type Instant = u64;
+            /// A duration of time, in nanoseconds.
+            pub type Duration = u64;
+            #[allow(unused_unsafe, clippy::all)]
+            /// Read the current value of the clock.
+            ///
+            /// The clock is monotonic, therefore calling this function repeatedly will
+            /// produce a sequence of non-decreasing values.
+            pub fn now() -> Instant {
+                unsafe {
+                    #[cfg(target_arch = "wasm32")]
+                    #[link(wasm_import_module = "wasi:clocks/monotonic-clock@0.2.6")]
+                    unsafe extern "C" {
+                        #[link_name = "now"]
+                        fn wit_import0() -> i64;
+                    }
+                    #[cfg(not(target_arch = "wasm32"))]
+                    unsafe extern "C" fn wit_import0() -> i64 {
+                        unreachable!()
+                    }
+                    let ret = unsafe { wit_import0() };
+                    ret as u64
+                }
+            }
+            #[allow(unused_unsafe, clippy::all)]
+            /// Query the resolution of the clock. Returns the duration of time
+            /// corresponding to a clock tick.
+            pub fn resolution() -> Duration {
+                unsafe {
+                    #[cfg(target_arch = "wasm32")]
+                    #[link(wasm_import_module = "wasi:clocks/monotonic-clock@0.2.6")]
+                    unsafe extern "C" {
+                        #[link_name = "resolution"]
+                        fn wit_import0() -> i64;
+                    }
+                    #[cfg(not(target_arch = "wasm32"))]
+                    unsafe extern "C" fn wit_import0() -> i64 {
+                        unreachable!()
+                    }
+                    let ret = unsafe { wit_import0() };
+                    ret as u64
+                }
+            }
+            #[allow(unused_unsafe, clippy::all)]
+            /// Create a `pollable` which will resolve once the specified instant
+            /// has occurred.
+            pub fn subscribe_instant(when: Instant) -> Pollable {
+                unsafe {
+                    #[cfg(target_arch = "wasm32")]
+                    #[link(wasm_import_module = "wasi:clocks/monotonic-clock@0.2.6")]
+                    unsafe extern "C" {
+                        #[link_name = "subscribe-instant"]
+                        fn wit_import0(_: i64) -> i32;
+                    }
+                    #[cfg(not(target_arch = "wasm32"))]
+                    unsafe extern "C" fn wit_import0(_: i64) -> i32 {
+                        unreachable!()
+                    }
+                    let ret = unsafe { wit_import0(_rt::as_i64(when)) };
+                    unsafe {
+                        super::super::super::wasi::io::poll::Pollable::from_handle(
+                            ret as u32,
+                        )
+                    }
+                }
+            }
+            #[allow(unused_unsafe, clippy::all)]
+            /// Create a `pollable` that will resolve after the specified duration has
+            /// elapsed from the time this function is invoked.
+            pub fn subscribe_duration(when: Duration) -> Pollable {
+                unsafe {
+                    #[cfg(target_arch = "wasm32")]
+                    #[link(wasm_import_module = "wasi:clocks/monotonic-clock@0.2.6")]
+                    unsafe extern "C" {
+                        #[link_name = "subscribe-duration"]
+                        fn wit_import0(_: i64) -> i32;
+                    }
+                    #[cfg(not(target_arch = "wasm32"))]
+                    unsafe extern "C" fn wit_import0(_: i64) -> i32 {
+                        unreachable!()
+                    }
+                    let ret = unsafe { wit_import0(_rt::as_i64(when)) };
+                    unsafe {
+                        super::super::super::wasi::io::poll::Pollable::from_handle(
+                            ret as u32,
+                        )
+                    }
+                }
+            }
+        }
+    }
+    pub mod io {
+        #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
+        pub mod poll {
+            #[used]
+            #[doc(hidden)]
+            static __FORCE_SECTION_REF: fn() = super::super::super::__link_custom_section_describing_imports;
+            use super::super::super::_rt;
+            #[derive(Debug)]
+            #[repr(transparent)]
+            pub struct Pollable {
+                handle: _rt::Resource<Pollable>,
+            }
+            impl Pollable {
+                #[doc(hidden)]
+                pub unsafe fn from_handle(handle: u32) -> Self {
+                    Self {
+                        handle: unsafe { _rt::Resource::from_handle(handle) },
+                    }
+                }
+                #[doc(hidden)]
+                pub fn take_handle(&self) -> u32 {
+                    _rt::Resource::take_handle(&self.handle)
+                }
+                #[doc(hidden)]
+                pub fn handle(&self) -> u32 {
+                    _rt::Resource::handle(&self.handle)
+                }
+            }
+            unsafe impl _rt::WasmResource for Pollable {
+                #[inline]
+                unsafe fn drop(_handle: u32) {
+                    #[cfg(not(target_arch = "wasm32"))]
+                    unreachable!();
+                    #[cfg(target_arch = "wasm32")]
+                    {
+                        #[link(wasm_import_module = "wasi:io/poll@0.2.6")]
+                        unsafe extern "C" {
+                            #[link_name = "[resource-drop]pollable"]
+                            fn drop(_: u32);
+                        }
+                        unsafe { drop(_handle) };
+                    }
+                }
+            }
+            impl Pollable {
+                #[allow(unused_unsafe, clippy::all)]
+                pub fn ready(&self) -> bool {
+                    unsafe {
+                        #[cfg(target_arch = "wasm32")]
+                        #[link(wasm_import_module = "wasi:io/poll@0.2.6")]
+                        unsafe extern "C" {
+                            #[link_name = "[method]pollable.ready"]
+                            fn wit_import0(_: i32) -> i32;
+                        }
+                        #[cfg(not(target_arch = "wasm32"))]
+                        unsafe extern "C" fn wit_import0(_: i32) -> i32 {
+                            unreachable!()
+                        }
+                        let ret = unsafe { wit_import0((self).handle() as i32) };
+                        _rt::bool_lift(ret as u8)
+                    }
+                }
+            }
+            impl Pollable {
+                #[allow(unused_unsafe, clippy::all)]
+                pub fn block(&self) -> () {
+                    unsafe {
+                        #[cfg(target_arch = "wasm32")]
+                        #[link(wasm_import_module = "wasi:io/poll@0.2.6")]
+                        unsafe extern "C" {
+                            #[link_name = "[method]pollable.block"]
+                            fn wit_import0(_: i32);
+                        }
+                        #[cfg(not(target_arch = "wasm32"))]
+                        unsafe extern "C" fn wit_import0(_: i32) {
+                            unreachable!()
+                        }
+                        unsafe { wit_import0((self).handle() as i32) };
+                    }
+                }
+            }
+            #[allow(unused_unsafe, clippy::all)]
+            pub fn poll(in_: &[&Pollable]) -> _rt::Vec<u32> {
+                unsafe {
+                    #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
+                    #[cfg_attr(target_pointer_width = "32", repr(align(4)))]
+                    struct RetArea(
+                        [::core::mem::MaybeUninit<
+                            u8,
+                        >; 2 * ::core::mem::size_of::<*const u8>()],
+                    );
+                    let mut ret_area = RetArea(
+                        [::core::mem::MaybeUninit::uninit(); 2
+                            * ::core::mem::size_of::<*const u8>()],
+                    );
+                    let vec0 = in_;
+                    let len0 = vec0.len();
+                    let layout0 = _rt::alloc::Layout::from_size_align_unchecked(
+                        vec0.len() * 4,
+                        4,
+                    );
+                    let result0 = if layout0.size() != 0 {
+                        let ptr = _rt::alloc::alloc(layout0).cast::<u8>();
+                        if ptr.is_null() {
+                            _rt::alloc::handle_alloc_error(layout0);
+                        }
+                        ptr
+                    } else {
+                        ::core::ptr::null_mut()
+                    };
+                    for (i, e) in vec0.into_iter().enumerate() {
+                        let base = result0.add(i * 4);
+                        {
+                            *base.add(0).cast::<i32>() = (e).handle() as i32;
+                        }
+                    }
+                    let ptr1 = ret_area.0.as_mut_ptr().cast::<u8>();
+                    #[cfg(target_arch = "wasm32")]
+                    #[link(wasm_import_module = "wasi:io/poll@0.2.6")]
+                    unsafe extern "C" {
+                        #[link_name = "poll"]
+                        fn wit_import2(_: *mut u8, _: usize, _: *mut u8);
+                    }
+                    #[cfg(not(target_arch = "wasm32"))]
+                    unsafe extern "C" fn wit_import2(_: *mut u8, _: usize, _: *mut u8) {
+                        unreachable!()
+                    }
+                    unsafe { wit_import2(result0, len0, ptr1) };
+                    let l3 = *ptr1.add(0).cast::<*mut u8>();
+                    let l4 = *ptr1
+                        .add(::core::mem::size_of::<*const u8>())
+                        .cast::<usize>();
+                    let len5 = l4;
+                    let result6 = _rt::Vec::from_raw_parts(l3.cast(), len5, len5);
+                    if layout0.size() != 0 {
+                        _rt::alloc::dealloc(result0.cast(), layout0);
+                    }
+                    result6
+                }
+            }
+        }
+    }
+}
+#[rustfmt::skip]
+#[allow(dead_code, clippy::all)]
 pub mod exports {
     pub mod ubet {
         pub mod bos {
@@ -254,342 +510,71 @@ pub mod exports {
                         }
                     }
                 }
-                pub type CallArgs = _rt::Vec<u8>;
                 pub type CallResult = Result<CallObject, CallError>;
-                #[derive(Debug)]
-                #[repr(transparent)]
-                pub struct Step {
-                    handle: _rt::Resource<Step>,
-                }
-                type _StepRep<T> = Option<T>;
-                impl Step {
-                    /// Creates a new resource from the specified representation.
-                    ///
-                    /// This function will create a new resource handle by moving `val` onto
-                    /// the heap and then passing that heap pointer to the component model to
-                    /// create a handle. The owned handle is then returned as `Step`.
-                    pub fn new<T: GuestStep>(val: T) -> Self {
-                        Self::type_guard::<T>();
-                        let val: _StepRep<T> = Some(val);
-                        let ptr: *mut _StepRep<T> = _rt::Box::into_raw(
-                            _rt::Box::new(val),
-                        );
-                        unsafe { Self::from_handle(T::_resource_new(ptr.cast())) }
-                    }
-                    /// Gets access to the underlying `T` which represents this resource.
-                    pub fn get<T: GuestStep>(&self) -> &T {
-                        let ptr = unsafe { &*self.as_ptr::<T>() };
-                        ptr.as_ref().unwrap()
-                    }
-                    /// Gets mutable access to the underlying `T` which represents this
-                    /// resource.
-                    pub fn get_mut<T: GuestStep>(&mut self) -> &mut T {
-                        let ptr = unsafe { &mut *self.as_ptr::<T>() };
-                        ptr.as_mut().unwrap()
-                    }
-                    /// Consumes this resource and returns the underlying `T`.
-                    pub fn into_inner<T: GuestStep>(self) -> T {
-                        let ptr = unsafe { &mut *self.as_ptr::<T>() };
-                        ptr.take().unwrap()
-                    }
-                    #[doc(hidden)]
-                    pub unsafe fn from_handle(handle: u32) -> Self {
-                        Self {
-                            handle: unsafe { _rt::Resource::from_handle(handle) },
-                        }
-                    }
-                    #[doc(hidden)]
-                    pub fn take_handle(&self) -> u32 {
-                        _rt::Resource::take_handle(&self.handle)
-                    }
-                    #[doc(hidden)]
-                    pub fn handle(&self) -> u32 {
-                        _rt::Resource::handle(&self.handle)
-                    }
-                    #[doc(hidden)]
-                    fn type_guard<T: 'static>() {
-                        use core::any::TypeId;
-                        static mut LAST_TYPE: Option<TypeId> = None;
-                        unsafe {
-                            assert!(! cfg!(target_feature = "atomics"));
-                            let id = TypeId::of::<T>();
-                            match LAST_TYPE {
-                                Some(ty) => {
-                                    assert!(
-                                        ty == id, "cannot use two types with this resource type"
-                                    )
-                                }
-                                None => LAST_TYPE = Some(id),
-                            }
-                        }
-                    }
-                    #[doc(hidden)]
-                    pub unsafe fn dtor<T: 'static>(handle: *mut u8) {
-                        Self::type_guard::<T>();
-                        let _ = unsafe {
-                            _rt::Box::from_raw(handle as *mut _StepRep<T>)
-                        };
-                    }
-                    fn as_ptr<T: GuestStep>(&self) -> *mut _StepRep<T> {
-                        Step::type_guard::<T>();
-                        T::_resource_rep(self.handle()).cast()
-                    }
-                }
-                /// A borrowed version of [`Step`] which represents a borrowed value
-                /// with the lifetime `'a`.
-                #[derive(Debug)]
-                #[repr(transparent)]
-                pub struct StepBorrow<'a> {
-                    rep: *mut u8,
-                    _marker: core::marker::PhantomData<&'a Step>,
-                }
-                impl<'a> StepBorrow<'a> {
-                    #[doc(hidden)]
-                    pub unsafe fn lift(rep: usize) -> Self {
-                        Self {
-                            rep: rep as *mut u8,
-                            _marker: core::marker::PhantomData,
-                        }
-                    }
-                    /// Gets access to the underlying `T` in this resource.
-                    pub fn get<T: GuestStep>(&self) -> &T {
-                        let ptr = unsafe { &mut *self.as_ptr::<T>() };
-                        ptr.as_ref().unwrap()
-                    }
-                    fn as_ptr<T: 'static>(&self) -> *mut _StepRep<T> {
-                        Step::type_guard::<T>();
-                        self.rep.cast()
-                    }
-                }
-                unsafe impl _rt::WasmResource for Step {
-                    #[inline]
-                    unsafe fn drop(_handle: u32) {
-                        #[cfg(not(target_arch = "wasm32"))]
-                        unreachable!();
-                        #[cfg(target_arch = "wasm32")]
-                        {
-                            #[link(wasm_import_module = "[export]ubet:bos/pipes")]
-                            unsafe extern "C" {
-                                #[link_name = "[resource-drop]step"]
-                                fn drop(_: u32);
-                            }
-                            unsafe { drop(_handle) };
-                        }
-                    }
-                }
-                #[derive(Debug)]
-                #[repr(transparent)]
-                pub struct Steps {
-                    handle: _rt::Resource<Steps>,
-                }
-                type _StepsRep<T> = Option<T>;
-                impl Steps {
-                    /// Creates a new resource from the specified representation.
-                    ///
-                    /// This function will create a new resource handle by moving `val` onto
-                    /// the heap and then passing that heap pointer to the component model to
-                    /// create a handle. The owned handle is then returned as `Steps`.
-                    pub fn new<T: GuestSteps>(val: T) -> Self {
-                        Self::type_guard::<T>();
-                        let val: _StepsRep<T> = Some(val);
-                        let ptr: *mut _StepsRep<T> = _rt::Box::into_raw(
-                            _rt::Box::new(val),
-                        );
-                        unsafe { Self::from_handle(T::_resource_new(ptr.cast())) }
-                    }
-                    /// Gets access to the underlying `T` which represents this resource.
-                    pub fn get<T: GuestSteps>(&self) -> &T {
-                        let ptr = unsafe { &*self.as_ptr::<T>() };
-                        ptr.as_ref().unwrap()
-                    }
-                    /// Gets mutable access to the underlying `T` which represents this
-                    /// resource.
-                    pub fn get_mut<T: GuestSteps>(&mut self) -> &mut T {
-                        let ptr = unsafe { &mut *self.as_ptr::<T>() };
-                        ptr.as_mut().unwrap()
-                    }
-                    /// Consumes this resource and returns the underlying `T`.
-                    pub fn into_inner<T: GuestSteps>(self) -> T {
-                        let ptr = unsafe { &mut *self.as_ptr::<T>() };
-                        ptr.take().unwrap()
-                    }
-                    #[doc(hidden)]
-                    pub unsafe fn from_handle(handle: u32) -> Self {
-                        Self {
-                            handle: unsafe { _rt::Resource::from_handle(handle) },
-                        }
-                    }
-                    #[doc(hidden)]
-                    pub fn take_handle(&self) -> u32 {
-                        _rt::Resource::take_handle(&self.handle)
-                    }
-                    #[doc(hidden)]
-                    pub fn handle(&self) -> u32 {
-                        _rt::Resource::handle(&self.handle)
-                    }
-                    #[doc(hidden)]
-                    fn type_guard<T: 'static>() {
-                        use core::any::TypeId;
-                        static mut LAST_TYPE: Option<TypeId> = None;
-                        unsafe {
-                            assert!(! cfg!(target_feature = "atomics"));
-                            let id = TypeId::of::<T>();
-                            match LAST_TYPE {
-                                Some(ty) => {
-                                    assert!(
-                                        ty == id, "cannot use two types with this resource type"
-                                    )
-                                }
-                                None => LAST_TYPE = Some(id),
-                            }
-                        }
-                    }
-                    #[doc(hidden)]
-                    pub unsafe fn dtor<T: 'static>(handle: *mut u8) {
-                        Self::type_guard::<T>();
-                        let _ = unsafe {
-                            _rt::Box::from_raw(handle as *mut _StepsRep<T>)
-                        };
-                    }
-                    fn as_ptr<T: GuestSteps>(&self) -> *mut _StepsRep<T> {
-                        Steps::type_guard::<T>();
-                        T::_resource_rep(self.handle()).cast()
-                    }
-                }
-                /// A borrowed version of [`Steps`] which represents a borrowed value
-                /// with the lifetime `'a`.
-                #[derive(Debug)]
-                #[repr(transparent)]
-                pub struct StepsBorrow<'a> {
-                    rep: *mut u8,
-                    _marker: core::marker::PhantomData<&'a Steps>,
-                }
-                impl<'a> StepsBorrow<'a> {
-                    #[doc(hidden)]
-                    pub unsafe fn lift(rep: usize) -> Self {
-                        Self {
-                            rep: rep as *mut u8,
-                            _marker: core::marker::PhantomData,
-                        }
-                    }
-                    /// Gets access to the underlying `T` in this resource.
-                    pub fn get<T: GuestSteps>(&self) -> &T {
-                        let ptr = unsafe { &mut *self.as_ptr::<T>() };
-                        ptr.as_ref().unwrap()
-                    }
-                    fn as_ptr<T: 'static>(&self) -> *mut _StepsRep<T> {
-                        Steps::type_guard::<T>();
-                        self.rep.cast()
-                    }
-                }
-                unsafe impl _rt::WasmResource for Steps {
-                    #[inline]
-                    unsafe fn drop(_handle: u32) {
-                        #[cfg(not(target_arch = "wasm32"))]
-                        unreachable!();
-                        #[cfg(target_arch = "wasm32")]
-                        {
-                            #[link(wasm_import_module = "[export]ubet:bos/pipes")]
-                            unsafe extern "C" {
-                                #[link_name = "[resource-drop]steps"]
-                                fn drop(_: u32);
-                            }
-                            unsafe { drop(_handle) };
-                        }
-                    }
-                }
                 #[doc(hidden)]
                 #[allow(non_snake_case)]
-                pub unsafe fn _export_constructor_call_object_cabi<T: GuestCallObject>(
+                pub unsafe fn _export_dispatch_cabi<T: Guest>(
                     arg0: *mut u8,
                     arg1: usize,
-                ) -> i32 {
-                    #[cfg(target_arch = "wasm32")] _rt::run_ctors_once();
-                    let len0 = arg1;
-                    let result1 = CallObject::new(
-                        T::new(_rt::Vec::from_raw_parts(arg0.cast(), len0, len0)),
-                    );
-                    (result1).take_handle() as i32
-                }
-                #[doc(hidden)]
-                #[allow(non_snake_case)]
-                pub unsafe fn _export_method_step_take_cabi<T: GuestStep>(
-                    arg0: *mut u8,
-                    arg1: i32,
-                    arg2: i32,
+                    arg2: *mut u8,
+                    arg3: usize,
                 ) -> *mut u8 {
                     #[cfg(target_arch = "wasm32")] _rt::run_ctors_once();
-                    let result0 = T::take(
-                        unsafe { StepBorrow::lift(arg0 as u32 as usize) }.get(),
-                        unsafe { Step::from_handle(arg1 as u32) },
-                        unsafe { CallObject::from_handle(arg2 as u32) },
+                    let base6 = arg0;
+                    let len6 = arg1;
+                    let mut result6 = _rt::Vec::with_capacity(len6);
+                    for i in 0..len6 {
+                        let base = base6
+                            .add(i * (4 * ::core::mem::size_of::<*const u8>()));
+                        let e6 = {
+                            let l0 = *base.add(0).cast::<*mut u8>();
+                            let l1 = *base
+                                .add(::core::mem::size_of::<*const u8>())
+                                .cast::<usize>();
+                            let len2 = l1;
+                            let bytes2 = _rt::Vec::from_raw_parts(l0.cast(), len2, len2);
+                            let l3 = *base
+                                .add(2 * ::core::mem::size_of::<*const u8>())
+                                .cast::<*mut u8>();
+                            let l4 = *base
+                                .add(3 * ::core::mem::size_of::<*const u8>())
+                                .cast::<usize>();
+                            let len5 = l4;
+                            let bytes5 = _rt::Vec::from_raw_parts(l3.cast(), len5, len5);
+                            (_rt::string_lift(bytes2), _rt::string_lift(bytes5))
+                        };
+                        result6.push(e6);
+                    }
+                    _rt::cabi_dealloc(
+                        base6,
+                        len6 * (4 * ::core::mem::size_of::<*const u8>()),
+                        ::core::mem::size_of::<*const u8>(),
                     );
-                    let ptr1 = (&raw mut _RET_AREA.0).cast::<u8>();
-                    match result0 {
+                    let len7 = arg3;
+                    let result8 = T::dispatch(
+                        result6,
+                        _rt::Vec::from_raw_parts(arg2.cast(), len7, len7),
+                    );
+                    let ptr9 = (&raw mut _RET_AREA.0).cast::<u8>();
+                    match result8 {
                         Ok(e) => {
-                            *ptr1.add(0).cast::<u8>() = (0i32) as u8;
-                            *ptr1.add(4).cast::<i32>() = (e).take_handle() as i32;
+                            *ptr9.add(0).cast::<u8>() = (0i32) as u8;
+                            *ptr9.add(4).cast::<i32>() = (e).take_handle() as i32;
                         }
                         Err(e) => {
-                            *ptr1.add(0).cast::<u8>() = (1i32) as u8;
-                            *ptr1.add(4).cast::<i32>() = (e).take_handle() as i32;
+                            *ptr9.add(0).cast::<u8>() = (1i32) as u8;
+                            *ptr9.add(4).cast::<i32>() = (e).take_handle() as i32;
                         }
                     };
-                    ptr1
-                }
-                #[doc(hidden)]
-                #[allow(non_snake_case)]
-                pub unsafe fn _export_method_steps_next_cabi<T: GuestSteps>(
-                    arg0: *mut u8,
-                ) -> *mut u8 {
-                    #[cfg(target_arch = "wasm32")] _rt::run_ctors_once();
-                    let result0 = T::next(
-                        unsafe { StepsBorrow::lift(arg0 as u32 as usize) }.get(),
-                    );
-                    let ptr1 = (&raw mut _RET_AREA.0).cast::<u8>();
-                    match result0 {
-                        Some(e) => {
-                            *ptr1.add(0).cast::<u8>() = (1i32) as u8;
-                            *ptr1.add(4).cast::<i32>() = (e).take_handle() as i32;
-                        }
-                        None => {
-                            *ptr1.add(0).cast::<u8>() = (0i32) as u8;
-                        }
-                    };
-                    ptr1
-                }
-                #[doc(hidden)]
-                #[allow(non_snake_case)]
-                pub unsafe fn _export_pipe_cabi<T: Guest>(
-                    arg0: i32,
-                    arg1: *mut u8,
-                    arg2: usize,
-                ) -> *mut u8 {
-                    #[cfg(target_arch = "wasm32")] _rt::run_ctors_once();
-                    let len0 = arg2;
-                    let result1 = T::pipe(
-                        unsafe { Steps::from_handle(arg0 as u32) },
-                        _rt::Vec::from_raw_parts(arg1.cast(), len0, len0),
-                    );
-                    let ptr2 = (&raw mut _RET_AREA.0).cast::<u8>();
-                    match result1 {
-                        Ok(e) => {
-                            *ptr2.add(0).cast::<u8>() = (0i32) as u8;
-                            *ptr2.add(4).cast::<i32>() = (e).take_handle() as i32;
-                        }
-                        Err(e) => {
-                            *ptr2.add(0).cast::<u8>() = (1i32) as u8;
-                            *ptr2.add(4).cast::<i32>() = (e).take_handle() as i32;
-                        }
-                    };
-                    ptr2
+                    ptr9
                 }
                 pub trait Guest {
                     type CallObject: GuestCallObject;
                     type CallError: GuestCallError;
-                    type Step: GuestStep;
-                    type Steps: GuestSteps;
-                    fn pipe(steps: Steps, args: CallArgs) -> CallResult;
+                    fn dispatch(
+                        env: _rt::Vec<(_rt::String, _rt::String)>,
+                        binargs: _rt::Vec<u8>,
+                    ) -> CallResult;
                 }
                 pub trait GuestCallObject: 'static {
                     #[doc(hidden)]
@@ -632,7 +617,6 @@ pub mod exports {
                             unsafe { rep(handle) }
                         }
                     }
-                    fn new(init: _rt::Vec<u8>) -> Self;
                 }
                 pub trait GuestCallError: 'static {
                     #[doc(hidden)]
@@ -676,115 +660,15 @@ pub mod exports {
                         }
                     }
                 }
-                pub trait GuestStep: 'static {
-                    #[doc(hidden)]
-                    unsafe fn _resource_new(val: *mut u8) -> u32
-                    where
-                        Self: Sized,
-                    {
-                        #[cfg(not(target_arch = "wasm32"))]
-                        {
-                            let _ = val;
-                            unreachable!();
-                        }
-                        #[cfg(target_arch = "wasm32")]
-                        {
-                            #[link(wasm_import_module = "[export]ubet:bos/pipes")]
-                            unsafe extern "C" {
-                                #[link_name = "[resource-new]step"]
-                                fn new(_: *mut u8) -> u32;
-                            }
-                            unsafe { new(val) }
-                        }
-                    }
-                    #[doc(hidden)]
-                    fn _resource_rep(handle: u32) -> *mut u8
-                    where
-                        Self: Sized,
-                    {
-                        #[cfg(not(target_arch = "wasm32"))]
-                        {
-                            let _ = handle;
-                            unreachable!();
-                        }
-                        #[cfg(target_arch = "wasm32")]
-                        {
-                            #[link(wasm_import_module = "[export]ubet:bos/pipes")]
-                            unsafe extern "C" {
-                                #[link_name = "[resource-rep]step"]
-                                fn rep(_: u32) -> *mut u8;
-                            }
-                            unsafe { rep(handle) }
-                        }
-                    }
-                    fn take(&self, step: Step, call: CallObject) -> CallResult;
-                }
-                pub trait GuestSteps: 'static {
-                    #[doc(hidden)]
-                    unsafe fn _resource_new(val: *mut u8) -> u32
-                    where
-                        Self: Sized,
-                    {
-                        #[cfg(not(target_arch = "wasm32"))]
-                        {
-                            let _ = val;
-                            unreachable!();
-                        }
-                        #[cfg(target_arch = "wasm32")]
-                        {
-                            #[link(wasm_import_module = "[export]ubet:bos/pipes")]
-                            unsafe extern "C" {
-                                #[link_name = "[resource-new]steps"]
-                                fn new(_: *mut u8) -> u32;
-                            }
-                            unsafe { new(val) }
-                        }
-                    }
-                    #[doc(hidden)]
-                    fn _resource_rep(handle: u32) -> *mut u8
-                    where
-                        Self: Sized,
-                    {
-                        #[cfg(not(target_arch = "wasm32"))]
-                        {
-                            let _ = handle;
-                            unreachable!();
-                        }
-                        #[cfg(target_arch = "wasm32")]
-                        {
-                            #[link(wasm_import_module = "[export]ubet:bos/pipes")]
-                            unsafe extern "C" {
-                                #[link_name = "[resource-rep]steps"]
-                                fn rep(_: u32) -> *mut u8;
-                            }
-                            unsafe { rep(handle) }
-                        }
-                    }
-                    fn next(&self) -> Option<Step>;
-                }
                 #[doc(hidden)]
                 macro_rules! __export_ubet_bos_pipes_cabi {
                     ($ty:ident with_types_in $($path_to_types:tt)*) => {
                         const _ : () = { #[unsafe (export_name =
-                        "ubet:bos/pipes#[constructor]call-object")] unsafe extern "C" fn
-                        export_constructor_call_object(arg0 : * mut u8, arg1 : usize,) ->
-                        i32 { unsafe { $($path_to_types)*::
-                        _export_constructor_call_object_cabi::<<$ty as
-                        $($path_to_types)*:: Guest >::CallObject > (arg0, arg1) } }
-                        #[unsafe (export_name = "ubet:bos/pipes#[method]step.take")]
-                        unsafe extern "C" fn export_method_step_take(arg0 : * mut u8,
-                        arg1 : i32, arg2 : i32,) -> * mut u8 { unsafe {
-                        $($path_to_types)*:: _export_method_step_take_cabi::<<$ty as
-                        $($path_to_types)*:: Guest >::Step > (arg0, arg1, arg2) } }
-                        #[unsafe (export_name = "ubet:bos/pipes#[method]steps.next")]
-                        unsafe extern "C" fn export_method_steps_next(arg0 : * mut u8,)
-                        -> * mut u8 { unsafe { $($path_to_types)*::
-                        _export_method_steps_next_cabi::<<$ty as $($path_to_types)*::
-                        Guest >::Steps > (arg0) } } #[unsafe (export_name =
-                        "ubet:bos/pipes#pipe")] unsafe extern "C" fn export_pipe(arg0 :
-                        i32, arg1 : * mut u8, arg2 : usize,) -> * mut u8 { unsafe {
-                        $($path_to_types)*:: _export_pipe_cabi::<$ty > (arg0, arg1, arg2)
-                        } } const _ : () = { #[doc(hidden)] #[unsafe (export_name =
+                        "ubet:bos/pipes#dispatch")] unsafe extern "C" fn
+                        export_dispatch(arg0 : * mut u8, arg1 : usize, arg2 : * mut u8,
+                        arg3 : usize,) -> * mut u8 { unsafe { $($path_to_types)*::
+                        _export_dispatch_cabi::<$ty > (arg0, arg1, arg2, arg3) } } const
+                        _ : () = { #[doc(hidden)] #[unsafe (export_name =
                         "ubet:bos/pipes#[dtor]call-object")] #[allow(non_snake_case)]
                         unsafe extern "C" fn dtor(rep : * mut u8) { unsafe {
                         $($path_to_types)*:: CallObject::dtor::< <$ty as
@@ -793,16 +677,7 @@ pub mod exports {
                         "ubet:bos/pipes#[dtor]call-error")] #[allow(non_snake_case)]
                         unsafe extern "C" fn dtor(rep : * mut u8) { unsafe {
                         $($path_to_types)*:: CallError::dtor::< <$ty as
-                        $($path_to_types)*:: Guest >::CallError > (rep) } } }; const _ :
-                        () = { #[doc(hidden)] #[unsafe (export_name =
-                        "ubet:bos/pipes#[dtor]step")] #[allow(non_snake_case)] unsafe
-                        extern "C" fn dtor(rep : * mut u8) { unsafe {
-                        $($path_to_types)*:: Step::dtor::< <$ty as $($path_to_types)*::
-                        Guest >::Step > (rep) } } }; const _ : () = { #[doc(hidden)]
-                        #[unsafe (export_name = "ubet:bos/pipes#[dtor]steps")]
-                        #[allow(non_snake_case)] unsafe extern "C" fn dtor(rep : * mut
-                        u8) { unsafe { $($path_to_types)*:: Steps::dtor::< <$ty as
-                        $($path_to_types)*:: Guest >::Steps > (rep) } } }; };
+                        $($path_to_types)*:: Guest >::CallError > (rep) } } }; };
                     };
                 }
                 #[doc(hidden)]
@@ -893,12 +768,62 @@ mod _rt {
             }
         }
     }
-    pub use alloc_crate::boxed::Box;
+    pub unsafe fn bool_lift(val: u8) -> bool {
+        if cfg!(debug_assertions) {
+            match val {
+                0 => false,
+                1 => true,
+                _ => panic!("invalid bool discriminant"),
+            }
+        } else {
+            val != 0
+        }
+    }
     pub use alloc_crate::vec::Vec;
+    pub use alloc_crate::alloc;
+    pub fn as_i64<T: AsI64>(t: T) -> i64 {
+        t.as_i64()
+    }
+    pub trait AsI64 {
+        fn as_i64(self) -> i64;
+    }
+    impl<'a, T: Copy + AsI64> AsI64 for &'a T {
+        fn as_i64(self) -> i64 {
+            (*self).as_i64()
+        }
+    }
+    impl AsI64 for i64 {
+        #[inline]
+        fn as_i64(self) -> i64 {
+            self as i64
+        }
+    }
+    impl AsI64 for u64 {
+        #[inline]
+        fn as_i64(self) -> i64 {
+            self as i64
+        }
+    }
+    pub use alloc_crate::boxed::Box;
     #[cfg(target_arch = "wasm32")]
     pub fn run_ctors_once() {
         wit_bindgen_rt::run_ctors_once();
     }
+    pub unsafe fn string_lift(bytes: Vec<u8>) -> String {
+        if cfg!(debug_assertions) {
+            String::from_utf8(bytes).unwrap()
+        } else {
+            String::from_utf8_unchecked(bytes)
+        }
+    }
+    pub unsafe fn cabi_dealloc(ptr: *mut u8, size: usize, align: usize) {
+        if size == 0 {
+            return;
+        }
+        let layout = alloc::Layout::from_size_align_unchecked(size, align);
+        alloc::dealloc(ptr, layout);
+    }
+    pub use alloc_crate::string::String;
     extern crate alloc as alloc_crate;
 }
 /// Generates `#[unsafe(no_mangle)]` functions to export the specified type as
@@ -935,18 +860,22 @@ pub(crate) use __export_bos_impl as export;
 #[unsafe(link_section = "component-type:wit-bindgen:0.41.0:ubet:bos:bos:encoded world")]
 #[doc(hidden)]
 #[allow(clippy::octal_escapes)]
-pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 428] = *b"\
-\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\xb2\x02\x01A\x02\x01\
-A\x02\x01B\x18\x04\0\x0bcall-object\x03\x01\x04\0\x0acall-error\x03\x01\x01p}\x04\
-\0\x09call-args\x03\0\x02\x01i\0\x01i\x01\x01j\x01\x04\x01\x05\x04\0\x0bcall-res\
-ult\x03\0\x06\x04\0\x04step\x03\x01\x04\0\x05steps\x03\x01\x01p}\x01@\x01\x04ini\
-t\x0a\0\x04\x04\0\x18[constructor]call-object\x01\x0b\x01h\x08\x01i\x08\x01@\x03\
-\x04self\x0c\x04step\x0d\x04call\x04\0\x07\x04\0\x11[method]step.take\x01\x0e\x01\
-h\x09\x01k\x0d\x01@\x01\x04self\x0f\0\x10\x04\0\x12[method]steps.next\x01\x11\x01\
-i\x09\x01@\x02\x05steps\x12\x04args\x03\0\x07\x04\0\x04pipe\x01\x13\x04\0\x0eube\
-t:bos/pipes\x05\0\x04\0\x0cubet:bos/bos\x04\0\x0b\x09\x01\0\x03bos\x03\0\0\0G\x09\
-producers\x01\x0cprocessed-by\x02\x0dwit-component\x070.227.1\x10wit-bindgen-rus\
-t\x060.41.0";
+pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 619] = *b"\
+\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\xf1\x03\x01A\x02\x01\
+A\x07\x01B\x0a\x04\0\x08pollable\x03\x01\x01h\0\x01@\x01\x04self\x01\0\x7f\x04\0\
+\x16[method]pollable.ready\x01\x02\x01@\x01\x04self\x01\x01\0\x04\0\x16[method]p\
+ollable.block\x01\x03\x01p\x01\x01py\x01@\x01\x02in\x04\0\x05\x04\0\x04poll\x01\x06\
+\x03\0\x12wasi:io/poll@0.2.6\x05\0\x02\x03\0\0\x08pollable\x01B\x0f\x02\x03\x02\x01\
+\x01\x04\0\x08pollable\x03\0\0\x01w\x04\0\x07instant\x03\0\x02\x01w\x04\0\x08dur\
+ation\x03\0\x04\x01@\0\0\x03\x04\0\x03now\x01\x06\x01@\0\0\x05\x04\0\x0aresoluti\
+on\x01\x07\x01i\x01\x01@\x01\x04when\x03\0\x08\x04\0\x11subscribe-instant\x01\x09\
+\x01@\x01\x04when\x05\0\x08\x04\0\x12subscribe-duration\x01\x0a\x03\0!wasi:clock\
+s/monotonic-clock@0.2.6\x05\x02\x01B\x0b\x04\0\x0bcall-object\x03\x01\x04\0\x0ac\
+all-error\x03\x01\x01i\0\x01i\x01\x01j\x01\x02\x01\x03\x04\0\x0bcall-result\x03\0\
+\x04\x01o\x02ss\x01p\x06\x01p}\x01@\x02\x03env\x07\x07binargs\x08\0\x05\x04\0\x08\
+dispatch\x01\x09\x04\0\x0eubet:bos/pipes\x05\x03\x04\0\x0cubet:bos/bos\x04\0\x0b\
+\x09\x01\0\x03bos\x03\0\0\0G\x09producers\x01\x0cprocessed-by\x02\x0dwit-compone\
+nt\x070.227.1\x10wit-bindgen-rust\x060.41.0";
 #[inline(never)]
 #[doc(hidden)]
 pub fn __link_custom_section_describing_imports() {
